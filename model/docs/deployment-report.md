@@ -47,7 +47,7 @@ supabase/migrations/
 
 สำหรับการสร้าง environment ใหม่ ให้รัน migrations ทั้งสองไฟล์ตามลำดับ ผลลัพธ์สุดท้ายจะถูกต้องและทำซ้ำได้. ไฟล์ corrected/squashed baseline ใน `db_work/schema/002_hardened_core.sql` ใช้เป็น schema reference หรือ bootstrap artifact ได้ แต่ไม่ควรวางใน migration runner พร้อมสองไฟล์ข้างต้น เพราะจะสร้างตารางซ้ำ
 
-`model/migrations/001_core.sql` เดิมเป็น design draft และไม่ตรงกับประวัติ deploy. เมื่อ publish ควรย้าย source of truth ไป `supabase/migrations`, แล้วเปลี่ยนไฟล์เดิมเป็นเอกสารอ้างอิงที่ชี้ไปยัง migration จริง หรือลบออกเพื่อป้องกันการ apply ผิดไฟล์
+`model/migrations/001_core.sql` เดิมเป็น design draft และไม่ตรงกับประวัติ deploy จึงลบออกจาก repository แล้วเพื่อป้องกันการ apply ผิดไฟล์; source of truth อยู่ใน `supabase/migrations`.
 
 ## งานถัดไป
 
