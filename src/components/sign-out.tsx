@@ -1,0 +1,1 @@
+'use client'; import {createClient} from '@/lib/supabase'; export function SignOut(){async function signOut(){const c=createClient();if(c) await c.auth.signOut(); location.href='/login'} return <button className="button" type="button" onClick={signOut}>ออกจากระบบ</button>}

@@ -1,0 +1,1 @@
+export default function Offline(){return <main className="container" style={{paddingTop:'20vh'}}><p className="eyebrow">LIFE OS</p><h1 className="title">คุณออฟไลน์อยู่</h1><p className="subtitle">เชื่อมต่ออินเทอร์เน็ตเพื่อโหลดข้อมูลล่าสุด</p></main>}

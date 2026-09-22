@@ -260,6 +260,10 @@ export type Database = {
           created_at: string
           display_name: string | null
           timezone: string
+          locale: string
+          base_currency: string
+          units: string
+          ai_consent: boolean
           updated_at: string
           user_id: string
         }
@@ -267,6 +271,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           timezone?: string
+          locale?: string
+          base_currency?: string
+          units?: string
+          ai_consent?: boolean
           updated_at?: string
           user_id: string
         }
@@ -274,6 +282,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           timezone?: string
+          locale?: string
+          base_currency?: string
+          units?: string
+          ai_consent?: boolean
           updated_at?: string
           user_id?: string
         }

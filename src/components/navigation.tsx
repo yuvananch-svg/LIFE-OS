@@ -1,0 +1,4 @@
+import Link from 'next/link';
+const items=[['Today','วันนี้','/today'],['Plan','วางแผน','/plan'],['Capture','บันทึก','/capture'],['Insights','ภาพรวม','/insights'],['Me','ฉัน','/me']];
+export function Navigation({active}:{active:string}){return <nav className="nav" aria-label="หลัก"><div className="navinner">{items.map(([en,th,href])=><Link className={active===en?'active':''} href={href} key={en}><div>{en==='Capture'?'＋ ':''}{en}</div><small>{th}</small></Link>)}</div></nav>}
+export function AppFrame({active,children}:{active:string;children:React.ReactNode}){return <div className="shell"><main className="container"><header className="topbar"><Link href="/today" className="brand">LIFE OS</Link><span className="eyebrow">Asia/Bangkok</span></header>{children}</main><Navigation active={active}/></div>}

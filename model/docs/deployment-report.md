@@ -11,6 +11,9 @@ Foundation database ถูก deploy และผ่านการทดสอ�
 |---|---|
 | Baseline migration `20260922032016` | สำเร็จ |
 | Typed-entity message fix `20260922084905` | สำเร็จ |
+| Profile defaults/backfill `20260922092436` | สำเร็จ |
+| Profile timezone hardening `20260922092639` | สำเร็จ |
+| Profile trigger truncation `20260922092948` | สำเร็จ |
 | ตารางใน `public` | 12 ตาราง เปิด RLS ครบ |
 | Section catalog | `tasks`, `calendar`, `health`, `finance` |
 | TypeScript database types | สร้างสำเร็จ |
@@ -18,13 +21,14 @@ Foundation database ถูก deploy และผ่านการทดสอ�
 
 ## ผลทดสอบ
 
-ชุดทดสอบถูกแบ่งเป็น 5 คำขอ SQL เพื่อให้อยู่ภายในขนาดที่ Supabase MCP รองรับ ทุกชุดสร้าง fixture ใน transaction ของตนเองและจบด้วย `ROLLBACK`
+ชุดทดสอบถูกแบ่งเป็น 6 คำขอ SQL เพื่อให้อยู่ภายในขนาดที่ Supabase MCP รองรับ ทุกชุดสร้าง fixture ใน transaction ของตนเองและจบด้วย `ROLLBACK`
 
 - `01_rls_crud.sql`: ผ่าน — owner A/B CRUD และ cross-user isolation
 - `02a_links_typed.sql`: ผ่าน — owner/cross-owner links และ typed rows
 - `02b_identity_time.sql`: ผ่าน — section/type validation, immutable identity และ time constraints
 - `03_finance_access.sql`: ผ่าน — balanced ledger, owner access, cross-owner/anon denial
 - `04_finance_invariants.sql`: ผ่าน — ปฏิเสธ empty และ unbalanced finance transactions
+- `profile_rls.sql`: ผ่าน — new-user provisioning with bounded display name, owner update, cross-owner update denial, invalid timezone/locale checks, and anon denial
 
 การทดสอบสดพบ bug ใน baseline: `validate_typed_entity()` ใช้ placeholder ของ PostgreSQL `format()` ผิดรูปแบบและคืน error `22023`. Migration `20260922084905` แก้เป็น `%s`, คง `SECURITY INVOKER`, pinned `search_path`, SQLSTATE `23514` และสิทธิ์ execute ที่จำกัดไว้ หลังแก้แล้วชุดทดสอบทั้งห้าผ่าน
 
@@ -35,17 +39,20 @@ Foundation database ถูก deploy และผ่านการทดสอ�
 
 ## การจัด migration ใน repository
 
-ให้เก็บ **ประวัติที่ deploy จริงแบบ immutable** เป็น source of truth:
+ให้เก็บ **ประวัติที่ deploy จริงแบบ immutable** เป็น source of truth. Profile verification used `supabase/tests/profile_rls.sql`, executed in one transaction and rolled back; no test users or profile rows remain:
 
 ```text
 supabase/migrations/
   20260922032016_life_os_core_baseline.sql
   20260922084905_fix_typed_entity_validation_message.sql
+  20260922092436_profile_defaults_and_backfill.sql
+  20260922092639_profile_timezone_hardening.sql
+  20260922092948_profile_trigger_truncate.sql
 ```
 
 ไฟล์แรกต้องตรงกับ SQL ที่ apply จริง รวม bug ของข้อความ error และไฟล์ที่สองต้องเก็บ fix ที่ apply จริง ห้ามแก้ย้อนหลังไฟล์ `20260922032016` เพราะจะทำให้ repository ไม่ตรงกับ migration history ของฐานข้อมูล
 
-สำหรับการสร้าง environment ใหม่ ให้รัน migrations ทั้งสองไฟล์ตามลำดับ ผลลัพธ์สุดท้ายจะถูกต้องและทำซ้ำได้. ไฟล์ corrected/squashed baseline ใน `db_work/schema/002_hardened_core.sql` ใช้เป็น schema reference หรือ bootstrap artifact ได้ แต่ไม่ควรวางใน migration runner พร้อมสองไฟล์ข้างต้น เพราะจะสร้างตารางซ้ำ
+สำหรับการสร้าง environment ใหม่ ให้รัน migrations ทั้งห้าไฟล์ตามลำดับ ผลลัพธ์สุดท้ายจะถูกต้องและทำซ้ำได้. ไฟล์ corrected/squashed baseline ใน `db_work/schema/002_hardened_core.sql` ใช้เป็น schema reference หรือ bootstrap artifact ได้ แต่ไม่ควรวางใน migration runner พร้อมห้าไฟล์ข้างต้น เพราะจะสร้างตารางซ้ำ
 
 `model/migrations/001_core.sql` เดิมเป็น design draft และไม่ตรงกับประวัติ deploy จึงลบออกจาก repository แล้วเพื่อป้องกันการ apply ผิดไฟล์; source of truth อยู่ใน `supabase/migrations`.
 

@@ -1,0 +1,3 @@
+export const SUPPORTED_TIMEZONES=['Asia/Bangkok','Asia/Tokyo','Europe/London','America/Los_Angeles'] as const;
+export function validateProfile(input:{timezone:string;locale:string;base_currency:string;units:string;display_name?:string|null}){return SUPPORTED_TIMEZONES.includes(input.timezone as never)&&/^[A-Za-z]{2,3}(-[A-Za-z]{2,4})?$/.test(input.locale)&&/^[A-Z]{3}$/.test(input.base_currency)&&['metric','imperial'].includes(input.units)&&(!input.display_name||input.display_name.length<=160)}
+export function safeNext(next:string| null,origin:string){if(!next)return '/today';try{const url=new URL(next,origin);if(url.origin!==origin||!url.pathname.startsWith('/')||next.includes('\\'))return '/today';return url.pathname+url.search+url.hash}catch{return '/today'}}

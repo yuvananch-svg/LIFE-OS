@@ -1,0 +1,2 @@
+import {ProfileForm} from '@/components/profile-form'; import {SignOut} from '@/components/sign-out'; import {AppFrame} from '@/components/navigation';
+export default function Me(){return <AppFrame active="Me"><section><p className="eyebrow">โปรไฟล์</p><h1 className="title">ตั้งค่าให้เข้ากับคุณ</h1><p className="subtitle">เวลาเริ่มต้นคือ Asia/Bangkok และเปลี่ยนได้ภายหลัง</p><ProfileForm/><div style={{marginTop:16}}><SignOut/></div></section></AppFrame>}
