@@ -1,6 +1,6 @@
 # LIFE-OS Architecture
 
-สถานะ: implementation-ready draft  
+สถานะ: foundation deployed and verified (2026-09-22)  
 ขอบเขต: โครงระบบที่ทำให้ข้อมูลจากทุก section (รวม section ที่จะเพิ่มภายหลัง) อยู่ใน graph เดียวกัน โดยไม่ผูก implementation เป็นคู่ ๆ ระหว่าง section
 
 ## 1. เป้าหมายและหลักการ
@@ -73,25 +73,27 @@ type SectionEnvelope<T> = {
 
 ## 4. Typed contract สำหรับ fact/metric/time block
 
-ทุก section adapter ต้องแปลงข้อมูลเข้า shape เดียวจาก `model/contracts/index.ts`: `TypedFact` (key, value, valueType, observedAt), `Metric` (metric, numeric value, unit, periodStart/periodEnd, dimensions) และ `TimeBlock` (startsAt, endsAt, status, source). แต่ละรายการมี `identity` และ `ownerUserId`; owner ต้องตรงกับ session/RLS. ค่า `FactValue` ห้ามใช้ object อิสระโดยไม่ประกาศ `valueType`. `Metric` ต้องมีหน่วยและช่วงเวลาเสมอ. `TimeBlock` ใช้ ISO timestamp และ interval แบบ `[startsAt, endsAt)`; contract status คือ `busy|tentative|available`. Migration 001 เก็บ `time_blocks.status` เป็น `planned` ตาม schema ปัจจุบัน; adapter ต้อง map `planned` เป็น `busy` หรือ `tentative` ตาม `kind/metadata` ที่ประกาศ; สถานะ `cancelled` ในอนาคตต้องถูกกรองออกจาก conflict calculation และสถานะที่ไม่รู้จักต้อง fail closed (ไม่จัดเป็น available และไม่ใช้วางแผน). Correlation ใช้เฉพาะ fields ที่ manifest ระบุและกฎ deterministic ที่มีหลักฐาน; ห้ามใช้ชื่อ/เวลาใกล้กันเป็น magic automatic link.
+ทุก section adapter ต้องแปลงข้อมูลเข้า shape เดียวจาก `model/contracts/index.ts`: `TypedFact` (key, value, valueType, observedAt), `Metric` (metric, numeric value, unit, periodStart/periodEnd, dimensions) และ `TimeBlock` (startsAt, endsAt, status, source). แต่ละรายการมี `identity` และ `ownerUserId`; owner ต้องตรงกับ session/RLS. ค่า `FactValue` ห้ามใช้ object อิสระโดยไม่ประกาศ `valueType`. `Metric` ต้องมีหน่วยและช่วงเวลาเสมอ. `TimeBlock` ใช้ ISO timestamp และ interval แบบ `[startsAt, endsAt)`; contract status คือ `busy|tentative|available`. Deployed schema เก็บ `time_blocks.status` เป็น `planned|cancelled`; adapter ต้อง map `planned` เป็น `busy` หรือ `tentative` ตาม `kind/metadata` ที่ประกาศ และต้องกรอง `cancelled` ออกจาก conflict calculation. สถานะที่ไม่รู้จักถูกปฏิเสธด้วย check constraint. Correlation ใช้เฉพาะ fields ที่ manifest ระบุและกฎ deterministic ที่มีหลักฐาน; ห้ามใช้ชื่อ/เวลาใกล้กันเป็น magic automatic link.
 
 ## 5. โมเดลฐานข้อมูล
 
 ตารางที่มีใน migration 001 (ใช้งานได้ระยะแรก):
 
-- `profiles(user_id, timezone, created_at)`
+- `profiles(user_id, display_name, timezone, created_at, updated_at)`; timezone เริ่มต้นเป็น `Asia/Bangkok`
 - `sections(id, key, name, version, schema, active)` และ `section_permissions(user_id, section_id, can_read, can_write)` (ใช้เป็น consent สำหรับ AI/service layer; ไม่ใช่การเปิดอ่าน DB แทน RLS)
 - `entity_records(id, user_id, section_id, entity_type, source_id, title, payload, valid_from, valid_to, created_at, updated_at)`; unique `(user_id, section_id, entity_type, source_id)` เป็น canonical index ของ object ทุก section
 - typed tables ระยะแรก: `tasks`, `events`, `workouts`, `health_measurements`, `finance_transactions`, `finance_entries`; ทุก row อ้าง `entity_records` ผ่าน `entity_id`
 - `entity_links(id, user_id, source_entity_id, target_entity_id, relation_type, metadata)` เป็นช่องทาง link ข้าม section เดียว
 - `time_blocks(id, user_id, entity_id?, starts_at, ends_at, kind, status, metadata)`
 
+Foundation ปัจจุบันมี 12 ตารางใน `public` และ seed catalog 4 ค่า: `tasks`, `calendar`, `health`, `finance`. Trigger บังคับให้ typed rows อ้าง canonical record ที่มี owner, section และ entity type ถูกต้อง; canonical identity `(user_id, section_id, entity_type, source_id)` เปลี่ยนภายหลังไม่ได้. Finance transaction ต้องมีอย่างน้อยสอง entries และยอดรวมศูนย์ก่อน commit.
+
 ตารางต่อไปนี้เป็น **future extensions** และยังไม่มีใน migration 001: `facts`, `metrics`, `canonical_entities` แยกต่างหาก, `domain_events`, `projection_checkpoints`, read models (`today_items`, `insight_cards`), `permissions` แบบแชร์ละเอียด และ `ai_runs`. ระยะแรกให้เก็บ fact/metric ใน typed section payload/ตารางที่มีอยู่ พร้อม provenance ใน payload/metadata; เมื่อเพิ่มตารางต้องคง contract และ RLS เดิมไว้.
 `entity_records.id` เป็น canonical ID ของ object ระยะแรก และ `entity_links` trace ความสัมพันธ์กลับไปยัง endpoints ได้เสมอ การ merge identity เป็น future workflow ต้องมี evidence และบันทึก metadata/audit; ห้าม overwrite payload ต้นทาง
 
 ## 6. Identity, links และความหมายข้าม section
 
-Identity ขั้นต่ำในทุก API/DB record คือ `(section, entityType, sourceId, userId)`; `sourceId` ตรงกับ `entity_records.source_id` ซึ่งบังคับและ unique ต่อ `(user_id, section_id, entity_type, source_id)`; `entity_records.id` เป็น canonical internal ID โดย `canonicalEntityId` เป็น optional และห้ามใช้ข้าม owner. ใน migration 001 `entity_links.metadata` ยังไม่มีคอลัมน์บังคับสำหรับ status/confidence/evidence; ช่วงแรกให้ถือ link ที่สร้างโดย user เป็น asserted และเก็บ metadata convention แบบ versioned เท่านั้น. สถานะ `proposed|confirmed|rejected`, confidence และ evidence ที่ schema บังคับเป็น future extension. Link สร้างได้จาก:
+Identity ขั้นต่ำในทุก API/DB record คือ `(section, entityType, sourceId, userId)`; `sourceId` ตรงกับ `entity_records.source_id` ซึ่งบังคับ, unique ต่อ `(user_id, section_id, entity_type, source_id)` และ immutable หลังสร้าง; `entity_records.id` เป็น canonical internal ID โดย `canonicalEntityId` เป็น optional และห้ามใช้ข้าม owner. ใน foundation ปัจจุบัน `entity_links.metadata` ยังไม่มีคอลัมน์บังคับสำหรับ status/confidence/evidence; ช่วงแรกให้ถือ link ที่สร้างโดย user เป็น asserted และเก็บ metadata convention แบบ versioned เท่านั้น. สถานะ `proposed|confirmed|rejected`, confidence และ evidence ที่ schema บังคับเป็น future extension. Link สร้างได้จาก:
 
 1. `asserted`: ผู้ใช้สร้าง/ยืนยันเอง พร้อม provenance
 2. `confirmed`: adapter หรือ deterministic rule จับคู่ได้ตาม mapping ที่ manifest ประกาศ เช่น external ID เดียวกัน
@@ -133,7 +135,7 @@ Correlation engine (future extension) consume typed payloads/ออกแบบ 
 - AI output: untrusted text; validate JSON schema and cited IDs; no direct SQL/tool execution or mutation
 - Logs: user_id and record IDs allowed for audit; payload/sensitive values redact ตาม section manifest
 
-RLS policy ขั้นต้น: `auth.uid() = user_id` สำหรับ select/insert/update/delete ทุกตารางที่มี user_id รวม links/time blocks/typed rows. `section_permissions` เป็น AI/service consent ไม่ใช่ cross-user sharing และไม่แทน RLS. Worker (เมื่อเพิ่ม) ใช้ explicit `user_id` scope และตรวจ consent ก่อนสร้าง context/projection.
+RLS policy ที่ deploy แล้ว: `auth.uid() = user_id` สำหรับ select/insert/update/delete ทุกตารางที่มี user_id รวม links/time blocks/typed rows. `section_permissions` เป็น AI/service consent ไม่ใช่ cross-user sharing และไม่แทน RLS. `anon` ไม่มีสิทธิ์บนตาราง Life OS; `authenticated` ได้สิทธิ์แบบ explicit เฉพาะตารางที่ต้องใช้. Worker (เมื่อเพิ่ม) ใช้ explicit `user_id` scope และตรวจ consent ก่อนสร้าง context/projection.
 
 ## 9. Incremental rollout
 
@@ -141,7 +143,7 @@ RLS policy ขั้นต้น: `auth.uid() = user_id` สำหรับ sele
 2. **First vertical slice**: tasks + calendar capture → time_blocks → Today/Plan + conflict detection
 3. **Graph layer**: entity_links ที่มีอยู่, registry, แล้วค่อยเพิ่ม canonical_entities/facts และ proposed/confirmed workflow เป็น future schema
 4. **AI/Insights**: scoped context builder, AI gateway, cited output; insight projections เป็น future extension
-5. **Additional sections**: health, finance และ section ใหม่ผ่าน manifest/adapter; migration ไม่เปลี่ยน contract กลาง
+5. **Additional sections**: ขยาย health/finance จาก starter tables และเพิ่ม section ใหม่ผ่าน manifest/adapter; migration ไม่เปลี่ยน contract กลาง
 6. **Hardening**: retries/checkpoints, audit, retention/export/delete, load and permission tests
 
 ## 10. ADRs ที่ต้องบันทึก
