@@ -77,7 +77,7 @@ type SectionEnvelope<T> = {
 
 ## 5. โมเดลฐานข้อมูล
 
-ตารางที่มีใน migration 001 (ใช้งานได้ระยะแรก):
+ตารางที่ deploy ใน foundation baseline (ใช้งานได้ระยะแรก):
 
 - `profiles(user_id, display_name, timezone, created_at, updated_at)`; timezone เริ่มต้นเป็น `Asia/Bangkok`
 - `sections(id, key, name, version, schema, active)` และ `section_permissions(user_id, section_id, can_read, can_write)` (ใช้เป็น consent สำหรับ AI/service layer; ไม่ใช่การเปิดอ่าน DB แทน RLS)
@@ -88,7 +88,7 @@ type SectionEnvelope<T> = {
 
 Foundation ปัจจุบันมี 12 ตารางใน `public` และ seed catalog 4 ค่า: `tasks`, `calendar`, `health`, `finance`. Trigger บังคับให้ typed rows อ้าง canonical record ที่มี owner, section และ entity type ถูกต้อง; canonical identity `(user_id, section_id, entity_type, source_id)` เปลี่ยนภายหลังไม่ได้. Finance transaction ต้องมีอย่างน้อยสอง entries และยอดรวมศูนย์ก่อน commit.
 
-ตารางต่อไปนี้เป็น **future extensions** และยังไม่มีใน migration 001: `facts`, `metrics`, `canonical_entities` แยกต่างหาก, `domain_events`, `projection_checkpoints`, read models (`today_items`, `insight_cards`), `permissions` แบบแชร์ละเอียด และ `ai_runs`. ระยะแรกให้เก็บ fact/metric ใน typed section payload/ตารางที่มีอยู่ พร้อม provenance ใน payload/metadata; เมื่อเพิ่มตารางต้องคง contract และ RLS เดิมไว้.
+ตารางต่อไปนี้เป็น **future extensions** และยังไม่มีใน deployed foundation: `facts`, `metrics`, `canonical_entities` แยกต่างหาก, `domain_events`, `projection_checkpoints`, read models (`today_items`, `insight_cards`), `permissions` แบบแชร์ละเอียด และ `ai_runs`. ระยะแรกให้เก็บ fact/metric ใน typed section payload/ตารางที่มีอยู่ พร้อม provenance ใน payload/metadata; เมื่อเพิ่มตารางต้องคง contract และ RLS เดิมไว้.
 `entity_records.id` เป็น canonical ID ของ object ระยะแรก และ `entity_links` trace ความสัมพันธ์กลับไปยัง endpoints ได้เสมอ การ merge identity เป็น future workflow ต้องมี evidence และบันทึก metadata/audit; ห้าม overwrite payload ต้นทาง
 
 ## 6. Identity, links และความหมายข้าม section
@@ -106,7 +106,7 @@ Relation มีชื่อและ schema (`supports`, `scheduled_for`, `cause
 ### Capture → Today/Plan
 
 1. UI ส่ง `CreateRecord` ผ่าน authenticated Supabase client หรือ server/API พร้อม section/entityType/sourceId/payload; server เติม user จาก session และ validate manifest
-2. transaction insert/update `entity_records` และ typed row ของ section; normalize `time_blocks` (ถ้ามี). Event/outbox และ idempotency เป็น future extension; ระยะแรกใช้ request id ที่ service layer
+2. transaction สร้าง `entity_records` และ typed row ของ section หรือแก้เฉพาะ mutable fields ของ record เดิม; normalize `time_blocks` (ถ้ามี). Identity fields เปลี่ยนภายหลังไม่ได้. Event/outbox และ idempotency เป็น future extension; ระยะแรกใช้ request id ที่ service layer
 3. Today/Plan query `entity_records`, typed tables และ `time_blocks` โดยตรงตาม owner/timezone; projection/read models เป็น future extension
 4. Today/Plan ลิงก์กลับ `entity_records` เพื่อแก้ไข; read model เป็น future optimization
 
@@ -120,7 +120,7 @@ Relation มีชื่อและ schema (`supports`, `scheduled_for`, `cause
 
 ### Cross-section correlation
 
-Correlation engine (future extension) consume typed payloads/ออกแบบ event จากทุก section แล้วใช้ manifest mapping registry เสนอ `proposed entity_links` หรือ `derived facts`; migration 001 ยังไม่มีสถานะ/ตารางสำหรับจัดเก็บ proposal แบบบังคับ schema ไม่เขียนตาราง section อื่น ไม่ทำ pairwise adapter. ตัวอย่างการใช้จริงคือ calendar time block เชื่อม task/health/finance record ผ่าน canonical entity หรือ evidence ที่ตรงกัน แล้วแสดงระดับ confidence และที่มาให้ผู้ใช้ตรวจ
+Correlation engine (future extension) consume typed payloads/ออกแบบ event จากทุก section แล้วใช้ manifest mapping registry เสนอ `proposed entity_links` หรือ `derived facts`; deployed foundation ยังไม่มีสถานะ/ตารางสำหรับจัดเก็บ proposal แบบบังคับ schema ไม่เขียนตาราง section อื่น ไม่ทำ pairwise adapter. ตัวอย่างการใช้จริงคือ calendar time block เชื่อม task/health/finance record ผ่าน canonical entity หรือ evidence ที่ตรงกัน แล้วแสดงระดับ confidence และที่มาให้ผู้ใช้ตรวจ
 
 ### Scheduling conflict
 
@@ -161,7 +161,7 @@ RLS policy ที่ deploy แล้ว: `auth.uid() = user_id` สำหรั
 
 - เพิ่ม section ใหม่ด้วย manifest + adapter แล้วสามารถ ingest/query typed payload โดยไม่แก้ section เดิมหรือเพิ่ม pairwise integration; event/provenance ที่บังคับ schemaเป็น future layer และระยะแรกใช้ payload/metadata convention
 - record ทุกชนิดตรวจ identity tuple ได้ และ duplicate source event ไม่สร้าง record/fact ซ้ำ
-- เมื่อเปิดใช้ fact/link extension แล้ว ทุก fact/link ต้องแสดง source record, observed time, confidence และ status; ใน migration 001 link ใช้ endpoint + metadata convention และห้ามตีความ metadata เป็น enforced status
+- เมื่อเปิดใช้ fact/link extension แล้ว ทุก fact/link ต้องแสดง source record, observed time, confidence และ status; ใน deployed foundation link ใช้ endpoint + metadata convention และห้ามตีความ metadata เป็น enforced status
 - ผู้ใช้ A ไม่สามารถอ่านหรืออนุมานข้อมูลของผู้ใช้ B ผ่าน API, projection, link หรือ AI context ได้ (RLS/integration tests)
 - Capture หนึ่งรายการปรากฏใน Today/Plan จาก entity_records/typed tables/time_blocks พร้อมลิงก์กลับ source; event replay เป็นเกณฑ์เมื่อ future event layer เปิดใช้
 - time blocks ต่าง section ที่ overlap กันสร้าง conflict ที่ตรวจสอบย้อนกลับได้ และไม่แก้ตารางอัตโนมัติ
