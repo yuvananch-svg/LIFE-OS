@@ -204,20 +204,22 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 
 ## 11. สถานะความคืบหน้าเทียบกับแผนงาน 9 ขั้นตอน
 
-> ตรวจจากไฟล์ใน branch `main` ณ 2026-09-24; เปอร์เซ็นต์เป็นการประเมินความครบของงานแต่ละขั้น ไม่ใช่ผลทดสอบการใช้งานจริงหรือค่าเฉลี่ยความคืบหน้าของทั้งโครงการ. สถานะฐานข้อมูลที่ deploy อ้างอิง [deployment report](model/docs/deployment-report.md).
+> ตรวจจาก working tree ณ 2026-09-24; เปอร์เซ็นต์เป็นการประเมินความครบของงานแต่ละขั้น ไม่ใช่ผลทดสอบการใช้งานจริงหรือค่าเฉลี่ยความคืบหน้าของทั้งโครงการ. สถานะฐานข้อมูลที่ deploy อ้างอิง [deployment report](model/docs/deployment-report.md). การเปลี่ยนแปลงรอบนี้ผ่าน lint, typecheck, unit tests, production build และ route smoke test; ยังไม่ได้ทดสอบกับอุปกรณ์หรือ Supabase ที่ deploy จริง.
 
-### 1. โครงแอพและงานตั้งต้น — ประมาณ 80–90%
+### 1. โครงแอพและงานตั้งต้น — ประมาณ 95% (โค้ดพร้อม; รอตรวจอุปกรณ์)
 
 - ทำแล้ว: ตั้ง Next.js, TypeScript และคำสั่ง lint, typecheck, test, build ใน [package.json](package.json)
-- ทำแล้ว: มี [CI](.github/workflows/ci.yml), [.env.example](.env.example), [PWA manifest](public/manifest.webmanifest), [service worker](public/sw.js) และหน้า offline
+- ทำแล้ว: มี [CI](.github/workflows/ci.yml), [.env.example](.env.example), [PWA manifest](public/manifest.webmanifest), service worker แบบ network-first ที่ไม่ cache หน้าข้อมูลส่วนตัว, ไอคอน PNG/SVG และหน้า offline
 - ทำแล้ว: มีโครง 5 เมนู Today, Plan, Capture, Insights, Me และ CSS สำหรับ layout
-- เหลือ: ตรวจการติดตั้งและการแสดงผล PWA บน iPhone/iPad และ desktop จริง รวมถึงสรุปวิธี backup/export และทดสอบอุปกรณ์
+- ทำแล้ว: เพิ่ม [คู่มือตรวจรับเฟส 1–2](docs/phase-1-2-verification.md) ระบุขั้นตอน PWA, offline และข้อจำกัด backup/export
+- เหลือ: ติดตั้งและตรวจการแสดงผล PWA บน iPhone/iPad และ desktop จริง; ยืนยัน retention/restore ของฐานข้อมูลในโปรเจกต์ที่ใช้งาน
 
-### 2. Auth และโปรไฟล์ — ประมาณ 75–85%
+### 2. Auth และโปรไฟล์ — ประมาณ 90% (โค้ดพร้อม; รอทดสอบระบบจริงสองบัญชี)
 
 - ทำแล้ว: มีหน้า [เข้าสู่ระบบด้วย email Magic Link](src/app/(auth)/login/page.tsx), callback และการตรวจ session ก่อนเข้าหน้าแอพ
 - ทำแล้ว: มี [ฟอร์มโปรไฟล์](src/components/profile-form.tsx) สำหรับ timezone, locale, currency, units และ AI consent; มี migration ตั้งค่าเริ่มต้นของโปรไฟล์และชุดทดสอบ [profile RLS](supabase/tests/profile_rls.sql)
 - ทำแล้ว: migration ฐานข้อมูลแกนกลางและการทดสอบแยกข้อมูลข้ามบัญชีถูกบันทึกใน [deployment report](model/docs/deployment-report.md)
+- ทำแล้ว: callback ส่ง auth cookies กลับพร้อม redirect; หน้า login แสดงสถานะส่ง/ข้อผิดพลาด, หน้า Me แสดงสถานะโหลด/บันทึก, logout แสดงข้อผิดพลาด
 - เหลือ: ทดสอบเส้นทาง login → callback → แก้โปรไฟล์ → logout กับ Supabase และเว็บที่ deploy จริง โดยใช้บัญชีต่างกันสองบัญชี
 
 ### 3. Planner schema — ยังไม่เริ่มงานขยาย (ฐานข้อมูลแกนกลางมีแล้ว)
