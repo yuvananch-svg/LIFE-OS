@@ -201,3 +201,63 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 - [WebKit: Web Push for Web Apps on iOS/iPadOS](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/)
 
 > เอกสารนี้เป็นแผน ไม่ใช่สถานะว่า implementation มีแล้ว; อัปเดต checklist/การตัดสินใจหลังสร้างต้นแบบและทดสอบอุปกรณ์จริง
+
+## 11. สถานะความคืบหน้าเทียบกับแผนงาน 9 ขั้นตอน
+
+> ตรวจจากไฟล์ใน branch `main` ณ 2026-09-24; เปอร์เซ็นต์เป็นการประเมินความครบของงานแต่ละขั้น ไม่ใช่ผลทดสอบการใช้งานจริงหรือค่าเฉลี่ยความคืบหน้าของทั้งโครงการ. สถานะฐานข้อมูลที่ deploy อ้างอิง [deployment report](model/docs/deployment-report.md).
+
+### 1. โครงแอพและงานตั้งต้น — ประมาณ 80–90%
+
+- ทำแล้ว: ตั้ง Next.js, TypeScript และคำสั่ง lint, typecheck, test, build ใน [package.json](package.json)
+- ทำแล้ว: มี [CI](.github/workflows/ci.yml), [.env.example](.env.example), [PWA manifest](public/manifest.webmanifest), [service worker](public/sw.js) และหน้า offline
+- ทำแล้ว: มีโครง 5 เมนู Today, Plan, Capture, Insights, Me และ CSS สำหรับ layout
+- เหลือ: ตรวจการติดตั้งและการแสดงผล PWA บน iPhone/iPad และ desktop จริง รวมถึงสรุปวิธี backup/export และทดสอบอุปกรณ์
+
+### 2. Auth และโปรไฟล์ — ประมาณ 75–85%
+
+- ทำแล้ว: มีหน้า [เข้าสู่ระบบด้วย email Magic Link](src/app/(auth)/login/page.tsx), callback และการตรวจ session ก่อนเข้าหน้าแอพ
+- ทำแล้ว: มี [ฟอร์มโปรไฟล์](src/components/profile-form.tsx) สำหรับ timezone, locale, currency, units และ AI consent; มี migration ตั้งค่าเริ่มต้นของโปรไฟล์และชุดทดสอบ [profile RLS](supabase/tests/profile_rls.sql)
+- ทำแล้ว: migration ฐานข้อมูลแกนกลางและการทดสอบแยกข้อมูลข้ามบัญชีถูกบันทึกใน [deployment report](model/docs/deployment-report.md)
+- เหลือ: ทดสอบเส้นทาง login → callback → แก้โปรไฟล์ → logout กับ Supabase และเว็บที่ deploy จริง โดยใช้บัญชีต่างกันสองบัญชี
+
+### 3. Planner schema — ยังไม่เริ่มงานขยาย (ฐานข้อมูลแกนกลางมีแล้ว)
+
+- ทำแล้ว: migration ชุดแรกมี section `tasks` และ `calendar`, entity กลาง, ความสัมพันธ์ข้าม section, time blocks และตารางงาน/นัดตั้งต้น
+- เหลือ: life areas, task completions/recurrence, habits/check-ins, goals/milestones และ availability rules ตาม [แผนเฟส 1](#7-ลำดับลงมือทำและงานที่ตรวจรับได้)
+- เหลือ: migration เพิ่ม, RLS และ tests สำหรับข้อมูลซ้ำ ข้อมูลต่างบัญชี และช่วงเวลาที่คร่อมวัน
+
+### 4. Capture → Today → Plan และการตรวจเวลาชน — มีเฉพาะโครงหน้า
+
+- ทำแล้ว: สร้างหน้า [Capture](src/app/(app)/capture/page.tsx), [Today](src/app/(app)/today/page.tsx) และ [Plan](src/app/(app)/plan/page.tsx) แล้ว
+- เหลือ: บันทึก/แก้งานและนัดจริง ดึงข้อมูลตามวันใน Asia/Bangkok และแสดงผลใน Today/Plan; ปุ่มบันทึกใน Capture ยัง disabled
+- เหลือ: ตรวจเวลาชนจากทุก section ที่ลง time block และแสดงรายการต้นทางพร้อมทางเลือกให้ผู้ใช้ยืนยัน
+
+### 5. Health — ยังไม่เริ่มฟีเจอร์
+
+- ทำแล้ว: มี section `health` และฐานข้อมูลแกนกลางสำหรับข้อมูลสุขภาพเริ่มต้น
+- เหลือ: schema และหน้าบันทึกอาหาร/macro, น้ำหนัก, น้ำ, นอน, steps, โปรแกรมฝึกและเซ็ต; คำนวณสรุปรายวันและ 7 วันพร้อมทดสอบสูตร
+
+### 6. Finance — มีเฉพาะฐานข้อมูลแกนกลาง
+
+- ทำแล้ว: มี section `finance`, โครงธุรกรรมการเงินเริ่มต้น และ [ชุดทดสอบสิทธิ์กับยอดธุรกรรม](supabase/tests)
+- เหลือ: wallets, หมวดหมู่, รายรับรายจ่าย, การโอน, bills, เป้าหมายออม และหน้าจอใช้งานจริง
+- เหลือ: ทดสอบยอด wallet จาก ledger และการโอนแบบสำเร็จครบสองฝั่งหรือ rollback ทั้งหมด
+
+### 7. Reminders, Insights และ export — มีเฉพาะโครงหน้า Insights
+
+- ทำแล้ว: มี [หน้า Insights](src/app/(app)/insights/page.tsx) เป็นหน้าเริ่มต้น
+- เหลือ: scheduler, กฎป้องกันเตือนซ้ำ, การตั้งค่าและส่ง notification, summary queries, export และทดสอบการอ่าน/คืนข้อมูล
+
+### 8. AI ข้ามทุก section — ออกแบบสัญญาแล้ว
+
+- ทำแล้ว: มี [เอกสารสถาปัตยกรรม](model/docs/architecture.md) และ [TypeScript contracts](model/contracts/index.ts) สำหรับการเชื่อม section
+- เหลือ: AI gateway, registry และ read tools ที่ทำงานกับข้อมูลจริง, การตรวจ consent/สิทธิ์, คำตอบพร้อมที่มา, การหาเวลาว่าง และการยืนยันก่อน write
+- เหลือ: ทดสอบเพิ่ม section ใหม่แล้ว AI ใช้ข้อมูลข้ามด้านได้ และปิดสิทธิ์ section แล้วข้อมูลไม่เข้าคำตอบ
+
+### 9. ทดสอบครบเส้นทางและปล่อยใช้จริง — ยังไม่เสร็จ
+
+- ทำแล้ว: มี CI สำหรับ lint/typecheck/unit tests/build, smoke script และ SQL tests ของฐานข้อมูลแกนกลาง
+- เหลือ: E2E ตั้งแต่ login → Capture → Today/Insights → export, ทดสอบ PWA บน iPhone จริง, backup/restore และตรวจสิทธิ์หลัง deploy
+- เหลือ: ตรวจผล CI ล่าสุดและทดสอบกับระบบที่ deploy ก่อนระบุว่าใช้งานประจำวันได้
+
+**งานถัดไป:** ปิดการทดสอบจริงของข้อ 2 แล้วเริ่มข้อ 3 โดยเพิ่ม Planner migration และ RLS tests ก่อนเชื่อมเส้นทางข้อ 4.
