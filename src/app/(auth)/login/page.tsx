@@ -1,2 +1,19 @@
-'use client'; import {useState} from 'react'; import {createClient} from '@/lib/supabase';
-export default function Login(){const [email,setEmail]=useState(''); const [message,setMessage]=useState(''); async function submit(e:React.FormEvent){e.preventDefault(); const c=createClient(); if(!c){setMessage('เพิ่มค่า Supabase ใน .env.local ก่อนใช้งาน');return} const {error}=await c.auth.signInWithOtp({email,options:{emailRedirectTo:`${location.origin}/callback`}});setMessage(error?.message??'เช็กลิงก์เข้าสู่ระบบในอีเมลของคุณ')} return <main className="container" style={{paddingTop:'15vh'}}><p className="eyebrow">LIFE OS</p><h1 className="title">ยินดีต้อนรับกลับ</h1><p className="subtitle">เข้าสู่ระบบด้วยอีเมลเพื่อดูข้อมูลของคุณ</p><form className="form" onSubmit={submit} style={{marginTop:24}}><input required type="email" className="input" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/><button className="button">ส่งลิงก์เข้าสู่ระบบ</button>{message&&<p role="status" className="subtitle">{message}</p>}</form></main>}
+import { LoginForm } from '@/components/login-form';
+
+const callbackErrors: Record<string, string> = {
+  missing_code: 'ลิงก์เข้าสู่ระบบไม่สมบูรณ์ กรุณาขอลิงก์ใหม่',
+  auth: 'ลิงก์หมดอายุหรือถูกใช้แล้ว กรุณาขอลิงก์ใหม่',
+  config: 'ยังไม่ได้ตั้งค่า Supabase',
+};
+
+export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
+  return (
+    <main className="container" style={{ paddingTop: '15vh' }}>
+      <p className="eyebrow">LIFE OS</p>
+      <h1 className="title">ยินดีต้อนรับกลับ</h1>
+      <p className="subtitle">เข้าสู่ระบบด้วยอีเมลเพื่อดูข้อมูลของคุณ</p>
+      <LoginForm initialError={error ? callbackErrors[error] ?? 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่' : ''} />
+    </main>
+  );
+}
