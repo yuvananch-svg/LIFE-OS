@@ -206,13 +206,14 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 
 > ตรวจจาก branch `main` ณ 2026-09-25; เปอร์เซ็นต์เป็นการประเมินความครบของงานแต่ละขั้น ไม่ใช่ผลทดสอบการใช้งานจริงหรือค่าเฉลี่ยความคืบหน้าของทั้งโครงการ. สถานะฐานข้อมูลที่ deploy อ้างอิง [deployment report](model/docs/deployment-report.md). โค้ดผ่าน lint, typecheck, unit tests, production build และ route smoke test; ผู้ใช้ยืนยันการล็อกอิน Magic Link บนเว็บ Vercel ตามข้อ 2 แล้ว; ยังไม่ได้ทดสอบ PWA บนอุปกรณ์จริงหรือแยกข้อมูลสองบัญชี
 
-### 1. โครงแอพและงานตั้งต้น — ประมาณ 95% (โค้ดพร้อม; รอตรวจอุปกรณ์)
+### 1. โครงแอพและงานตั้งต้น — ประมาณ 98% (ผู้ใช้ยืนยัน PWA ใช้งานจริงบน iPhone ได้)
 
 - ทำแล้ว: ตั้ง Next.js, TypeScript และคำสั่ง lint, typecheck, test, build ใน [package.json](package.json)
 - ทำแล้ว: มี [CI](.github/workflows/ci.yml), [.env.example](.env.example), [PWA manifest](public/manifest.webmanifest), service worker แบบ network-first ที่ไม่ cache หน้าข้อมูลส่วนตัว, ไอคอน PNG/SVG และหน้า offline
 - ทำแล้ว: มีโครง 5 เมนู Today, Plan, Capture, Insights, Me และ CSS สำหรับ layout
 - ทำแล้ว: เพิ่ม [คู่มือตรวจรับเฟส 1–2](docs/phase-1-2-verification.md) ระบุขั้นตอน PWA, offline และข้อจำกัด backup/export
-- เหลือ: ติดตั้งและตรวจการแสดงผล PWA บน iPhone/iPad และ desktop จริง; ยืนยัน retention/restore ของฐานข้อมูลในโปรเจกต์ที่ใช้งาน
+- ทดสอบจริง 2026-09-25: ผู้ใช้ยืนยันว่าติดตั้งและใช้งาน PWA บน iPhone ได้จริง
+- เหลือ: ตรวจการแสดงผลบน iPad/desktop และยืนยัน retention/restore ของฐานข้อมูลในโปรเจกต์ที่ใช้งาน
 
 ### 2. Auth และโปรไฟล์ — ประมาณ 95% (ยืนยันล็อกอินจริงบน Vercel แล้ว; เหลือทดสอบแยกข้อมูลสองบัญชี)
 
