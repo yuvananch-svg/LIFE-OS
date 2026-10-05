@@ -134,7 +134,8 @@ export async function querySections(registry: SectionRegistry, request: QueryReq
   if (request.limit !== undefined && (!Number.isFinite(request.limit) || request.limit < 0)) throw new Error("Invalid query limit");
   const sections = [...new Set(request.sections)].filter((s) => allowed(scope, s));
   const denied = [...new Set(request.sections)].filter((s) => !allowed(scope, s));
-  const results = await Promise.all(sections.map(async (section) => {
+  type SectionReadResult = { section: string; error: string } | { section: string; payload: SectionPayload };
+  const results: SectionReadResult[] = await Promise.all(sections.map(async (section): Promise<SectionReadResult> => {
     const capability = registry.get(section);
     if (!capability) return { section, error: "Section is not registered" };
     try { return { section, payload: await capability.read(request) }; }

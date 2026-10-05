@@ -1,2 +1,2 @@
-import {redirect} from 'next/navigation'; import {createClient} from '@/lib/supabase-server';
-export default async function AppLayout({children}:{children:React.ReactNode}){const client=await createClient(); if(!client) redirect('/login?error=config'); const {data:{user},error}=await client.auth.getUser(); if(error||!user) redirect('/login'); return children}
+import {redirect} from 'next/navigation'; import {createClient} from '@/lib/supabase-server'; import {CaptureProvider} from '@/features/capture/capture-provider';
+export default async function AppLayout({children}:{children:React.ReactNode}){const client=await createClient(); if(!client) redirect('/login?error=config'); const {data:{user},error}=await client.auth.getUser(); if(error||!user) redirect('/login'); return <CaptureProvider key={user.id} userId={user.id}>{children}</CaptureProvider>}
