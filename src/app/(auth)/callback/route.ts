@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { safeNext } from '@/lib/profile-validation';
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/supabase-config';
+import { hasSupabaseConfig, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/supabase-config';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const target = safeNext(searchParams.get('next'), origin);
 
   if (!code) return NextResponse.redirect(new URL('/login?error=missing_code', origin));
+  if (!hasSupabaseConfig()) return NextResponse.redirect(new URL('/login?error=config', origin));
 
   let response = NextResponse.next();
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {

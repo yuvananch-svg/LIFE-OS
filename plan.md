@@ -110,15 +110,15 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 
 | Sub task | งาน | รายละเอียด | เกณฑ์ตรวจรับ | สถานะ |
 |---|---|---|---|---|
-| 2.1 | ตรวจ configuration | env, Site URL และ callback allowlist | ตรงกับเว็บที่ใช้งาน | ยังไม่ตรวจรับ |
-| 2.2 | ตรวจ Magic Link | ส่งลิงก์ เปิด callback และเข้าสู่แอพ | ล็อกอินสำเร็จใน flow ปกติ | ยังไม่ตรวจรับ |
-| 2.3 | ตรวจลิงก์ผิด/หมดอายุ | missing code, ลิงก์ใช้แล้ว และ callback target | แสดงข้อผิดพลาดและขอลิงก์ใหม่ได้ | ยังไม่ตรวจรับ |
-| 2.4 | ตรวจโปรไฟล์ | โหลด บันทึก และ reload ทุกช่อง | ค่าที่บันทึกกลับมาเหมือนเดิม | ยังไม่ตรวจรับ |
-| 2.5 | ตรวจสองบัญชี | ใช้โปรไฟล์ต่างกันและสลับบัญชี | ไม่มีข้อมูลข้ามบัญชี | ยังไม่ตรวจรับ |
-| 2.6 | ตรวจ session/logout | refresh, session หมดอายุ และ protected route หลัง logout | ผู้ไม่มี session ถูกส่งไป login | ยังไม่ตรวจรับ |
-| 2.7 | สรุปตรวจรับ | แยกผล SQL tests กับผลทดสอบผ่านเว็บ | มีหลักฐานก่อนปิดข้อ 2 | ยังไม่ตรวจรับ |
-| 2.8 | รวม profile context และ timezone | ให้ app shell โหลด preferences จากบัญชีที่ยืนยันแล้ว; ส่ง timezone/locale ไป UI และ command context แทน Asia/Bangkok คงที่; ตรวจ session/account change ไม่ให้ใช้ preferences เดิม | header และวันนี้/พรุ่งนี้ใช้ timezone โปรไฟล์เดียวกัน; สลับบัญชี/logout ไม่เหลือ context เก่า | ยังไม่ตรวจรับ |
-| 2.9 | ออกแบบ consent กลาง | กำหนดความหมาย global ai_consent + section_permissions และการอนุญาตส่งเสียงไป transcription provider; เตรียม UI/contract สำหรับ scope resolver ในข้อ 3.12 | ปิด global หรือสิทธิ์ section แล้วถูกปฏิเสธตามกฎ; กำหนด default deny และขอบเขตการเพิกถอนชัดเจน | ยังไม่ตรวจรับ |
+| 2.1 | ตรวจ configuration | env, Site URL และ callback allowlist | ตรงกับเว็บที่ใช้งาน | บางส่วน: env-only values and code guards documented; hosted Site URL/allowlist awaiting dashboard verification |
+| 2.2 | ตรวจ Magic Link | ส่งลิงก์ เปิด callback และเข้าสู่แอพ | ล็อกอินสำเร็จใน flow ปกติ | ยังไม่ตรวจรับ: no authorized project/email session for live link |
+| 2.3 | ตรวจลิงก์ผิด/หมดอายุ | missing code, ลิงก์ใช้แล้ว และ callback target | แสดงข้อผิดพลาดและขอลิงก์ใหม่ได้ | โค้ดเทสต์: route tests cover missing code, missing config, expired/reused error, cookie transfer and unsafe target; live email pending |
+| 2.4 | ตรวจโปรไฟล์ | โหลด บันทึก และ reload ทุกช่อง | ค่าที่บันทึกกลับมาเหมือนเดิม | บางส่วน: profile/context and fail-closed editing implemented; account persistence/reload browser acceptance pending |
+| 2.5 | ตรวจสองบัญชี | ใช้โปรไฟล์ต่างกันและสลับบัญชี | ไม่มีข้อมูลข้ามบัญชี | ยังไม่ตรวจรับ: request-generation unit test only; two real accounts/devices pending |
+| 2.6 | ตรวจ session/logout | refresh, session หมดอายุ และ protected route หลัง logout | ผู้ไม่มี session ถูกส่งไป login | บางส่วน: protected-route smoke and auth-change clearing code; expiry/browser acceptance pending |
+| 2.7 | สรุปตรวจรับ | แยกผล SQL tests กับผลทดสอบผ่านเว็บ | มีหลักฐานก่อนปิดข้อ 2 | บางส่วน: local checks/evidence listed in `docs/phase-1-2-verification.md`; live browser and SQL RLS suites not run |
+| 2.8 | รวม profile context และ timezone | ให้ app shell โหลด preferences จากบัญชีที่ยืนยันแล้ว; ส่ง timezone/locale ไป UI และ command context แทน Asia/Bangkok คงที่; ตรวจ session/account change ไม่ให้ใช้ preferences เดิม | header และวันนี้/พรุ่งนี้ใช้ timezone โปรไฟล์เดียวกัน; สลับบัญชี/logout ไม่เหลือ context เก่า | ทำในโค้ด: app shell loads profile/permissions/sections for verified user; keyed shared context drives timezone header, Today/tomorrow labels, and clears on logout/account change; capture cleanup is tied to context invalidation. Locale/timezone labels have UTC-boundary and DST tests; live two-account/device acceptance pending |
+| 2.9 | ออกแบบ consent กลาง | กำหนดความหมาย global ai_consent + section_permissions และการอนุญาตส่งเสียงไป transcription provider; เตรียม UI/contract สำหรับ scope resolver ในข้อ 3.12 | ปิด global หรือสิทธิ์ section แล้วถูกปฏิเสธตามกฎ; กำหนด default deny และขอบเขตการเพิกถอนชัดเจน | ทำ contract/UI: global consent intersected with per-user section permission; missing rows/default and failed loads deny; write requires read+write; transcription disclosed but disabled until provider lifecycle; resolver enforcement remains 3.12; tests cover pure policy |
 
 ### 12.5 3. Planner schema และกฎข้อมูล
 
@@ -269,3 +269,11 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 Lint รอบนี้ไม่มี error และมี warning เดิมหนึ่งจุด: `eslint.config.mjs:1:62` (`import/no-anonymous-default-export`). ผล SQL remote, two-account browser test และ device acceptance ไม่ได้รันใหม่ในรอบนี้
 
 **กติกาบันทึกความคืบหน้าต่อไป:** หลังจบงานแต่ละชุดให้อัปเดตสถานะ sub task, สิ่งที่เปลี่ยน, tests/หลักฐาน, commit/PR และงานค้างใน Git ทุกครั้ง; ใช้ “เสร็จ” เฉพาะเกณฑ์ที่ตรวจผ่านจริง และแยกเตรียมโครง/รออนุมัติ/รออุปกรณ์ออกจากงานตรวจรับแล้ว
+
+### 12.14 Phase 2 implementation log — 2026-10-05
+
+- Branch: `feat/phase2-auth-profile-consent` (implementation only; not committed).
+- Added explicit Supabase env configuration, `/callback` OTP redirect, callback config/missing-code handling, and verified-identity profile/section loading. No auth provider/email or production database was invoked.
+- Added shared user-keyed profile context, timezone/locale-aware shell and Today date labels, and logout/account-change invalidation. Consent UI uses existing `ai_consent` and `section_permissions`, with default-deny missing rows and transcription disclosure only.
+- Local verification: `npm run typecheck` passed; `npm test` passed (28 tests across 6 files, including 4 callback-route tests and timezone boundary/DST + consent contract tests); `npm run lint` passed with one pre-existing `eslint.config.mjs` warning; `npm run smoke` passed public login/offline, protected route redirect, and callback missing-code checks. SQL RLS tests and live two-account/device acceptance were not run.
+

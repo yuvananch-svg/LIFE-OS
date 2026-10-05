@@ -1,9 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from './src/lib/supabase-config';
+import { hasSupabaseConfig, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from './src/lib/supabase-config';
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  if (!hasSupabaseConfig()) return response;
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
       getAll: () => request.cookies.getAll(),
@@ -17,7 +18,8 @@ export async function proxy(request: NextRequest) {
 
   // getClaims verifies the JWT and refreshes an expiring session. Route layouts
   // still check identity before rendering protected content.
-  await supabase.auth.getClaims();
+  const { error } = await supabase.auth.getClaims();
+  if (error) return response;
   return response;
 }
 

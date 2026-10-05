@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { CaptureCleanupRegistry, type CaptureAvailability } from './capture-controller';
+import { useProfileContext } from '@/features/profile/profile-context';
 
 type Cleanup = () => void | Promise<void>;
 interface CaptureContextValue {
@@ -16,6 +17,7 @@ const CaptureContext = createContext<CaptureContextValue | null>(null);
 /** Shared lifecycle boundary; no recorder/session implementation is installed. */
 export function CaptureProvider({ userId, children }: { userId: string; children: React.ReactNode }) {
   const pathname = usePathname();
+  const profileContext = useProfileContext();
   const registry = useRef<CaptureCleanupRegistry | null>(null);
   if (registry.current === null) registry.current = new CaptureCleanupRegistry();
   const cleanAll = useCallback(() => registry.current!.disposeAll(), []);
@@ -29,6 +31,10 @@ export function CaptureProvider({ userId, children }: { userId: string; children
   useEffect(() => {
     return () => { void cleanAll(); };
   }, [userId, pathname, cleanAll]);
+
+  useEffect(() => {
+    if (!profileContext.ready || profileContext.userId !== userId) void cleanAll();
+  }, [profileContext.ready, profileContext.userId, userId, cleanAll]);
 
   return <CaptureContext.Provider value={value}>{children}</CaptureContext.Provider>;
 }
