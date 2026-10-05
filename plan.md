@@ -272,8 +272,17 @@ Lint รอบนี้ไม่มี error และมี warning เดิ�
 
 ### 12.14 Phase 2 implementation log — 2026-10-05
 
-- Branch: `feat/phase2-auth-profile-consent`; implementation commit [56b4d56](https://github.com/yuvananch-svg/LIFE-OS/commit/56b4d56c698a46fc3464e2b00b74e8cc921e342a); [PR #3](https://github.com/yuvananch-svg/LIFE-OS/pull/3) opened for review (not merged). Supervisor gpt-6.1-sol ระดับ light ตรวจ/ตีกลับและเพิ่ม callback route tests; worker gpt-6-luna ระดับ light ลงมือทำ.
+- Branch: `feat/phase2-auth-profile-consent`; implementation commit [56b4d56](https://github.com/yuvananch-svg/LIFE-OS/commit/56b4d56c698a46fc3464e2b00b74e8cc921e342a); [PR #3](https://github.com/yuvananch-svg/LIFE-OS/pull/3) merged into `main` ตามคำสั่งผู้ใช้ ที่ commit [46c238d](https://github.com/yuvananch-svg/LIFE-OS/commit/46c238dd0e855f3a0f22c52f5161ef50715465ca). Supervisor gpt-6.1-sol ระดับ light ตรวจ/ตีกลับและเพิ่ม callback route tests; worker gpt-6-luna ระดับ light ลงมือทำ.
 - Added explicit Supabase env configuration, `/callback` OTP redirect, callback config/missing-code handling, and verified-identity profile/section loading. No Magic Link email was sent and no production database was changed.
 - Added shared user-keyed profile context, timezone/locale-aware shell and Today date labels, and logout/account-change invalidation. Consent UI uses existing `ai_consent` and `section_permissions`, with default-deny missing rows and transcription disclosure only.
 - Local verification: `npm run typecheck` passed; `npm test` passed (28 tests across 6 files, including 4 callback-route tests and timezone boundary/DST + consent contract tests); `npm run lint` passed with one pre-existing `eslint.config.mjs` warning; `npm run smoke` passed public login/offline, protected route redirect, and callback missing-code checks. SQL RLS tests and live two-account/device acceptance were not run.
 
+
+- [x] ผู้คุมงานตรวจรับโค้ดข้อ 2 รอบนี้และ GitHub CI `verify` ผ่านทั้งสอง check runs ที่ PR head `21c4e8d` ก่อน merge
+- [x] Merge PR #3 เข้า `main` วันที่ 2026-10-05; shared profile context/timezone และ consent UI/contracts อยู่ในโค้ดหลักแล้ว
+- [x] บันทึกผล tests **28 รายการ**, typecheck, lint, production build และ smoke test พร้อมสถานะ sub tasks ในหัวข้อ 12.4
+- [ ] ตรวจ environment/redirect allowlist บนระบบที่ deploy จริง โดยเฉพาะหลังเลิกใช้ Supabase fallback ที่ฝังในโค้ด
+- [ ] ทดสอบ Magic Link จริง, สองบัญชีผ่าน browser, session expiry/logout และอุปกรณ์จริง; ข้อ 2 ยังไม่ถือว่าตรวจรับครบทั้งหมด
+- [ ] ตรวจผล production deployment และทดสอบหลัง deploy; การ merge ไม่ใช่หลักฐานว่า deployment สำเร็จ
+
+**สถานะล่าสุด:** งานโค้ดข้อ 2 รอบนี้ merge แล้วและผ่าน local/CI checks; งานตรวจรับระบบจริงยังค้างตามรายการด้านบน งานพัฒนาถัดไปคือข้อ 3 Planner schema/command contracts โดยต้องคงงานตรวจรับข้อ 1–2 ที่ค้างไว้ใน checklist
