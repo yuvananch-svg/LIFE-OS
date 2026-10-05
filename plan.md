@@ -103,7 +103,7 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 1.6 | ตรวจการเข้าถึง | focus, labels, contrast และขนาดพื้นที่กด | ใช้คีย์บอร์ดและกดบนมือถือได้ | ยังไม่ตรวจรับ |
 | 1.7 | สรุปตรวจรับ | บันทึกผลจริงและข้อจำกัด | checklist ครบพร้อมหลักฐาน | ยังไม่ตรวจรับ |
 | 1.8 | ปรับ app shell สำหรับ Voice Capture | แยก navigation link ออกจากปุ่มกดค้าง; เพิ่ม client controller/provider ร่วมทุกหน้า โดยคง protected layout ฝั่ง server; วางไฟล์ใน src/features/capture และใช้ /capture สำหรับตรวจ transcript/ผลลัพธ์ตามแบบที่อนุมัติ | กดค้างจากทุกหน้าได้; มี recording session เดียว; เปลี่ยนหน้า/ยกเลิก/logout แล้วหยุดไมค์และ cleanup | เตรียม provider + cleanup registry หลัง auth; ไม่มีไมค์หรือ action; เกณฑ์ recording/session จริงยังค้าง |
-| 1.9 | จัด contracts และ test coverage พื้นฐาน | กำหนดตำแหน่ง shared contracts เดียว; ปรับ vitest include ให้รัน model/contracts/index.test.ts หรือย้ายพร้อมปรับ imports; เปลี่ยน top-level assertions เป็น tests ที่ runner รองรับ; ตรวจ typecheck ครอบคลุมไฟล์กลางที่ไม่ได้ถูก import โดย src | CI รัน tests ของ registry/conflict/availability จริงและตรวจ types ของไฟล์กลาง; ไม่รอข้อ 9 | ตรวจในเครื่องผ่าน: `npm test` 4 files / 18 tests; `npm run typecheck` ผ่าน; หลักฐานเพิ่มใน [verification checkpoint](docs/voice-capture-design.md) |
+| 1.9 | จัด contracts และ test coverage พื้นฐาน | กำหนดตำแหน่ง shared contracts เดียว; ปรับ vitest include ให้รัน model/contracts/index.test.ts หรือย้ายพร้อมปรับ imports; เปลี่ยน top-level assertions เป็น tests ที่ runner รองรับ; ตรวจ typecheck ครอบคลุมไฟล์กลางที่ไม่ได้ถูก import โดย src | CI รัน tests ของ registry/conflict/availability จริงและตรวจ types ของไฟล์กลาง; ไม่รอข้อ 9 | เสร็จและ merge แล้วผ่าน [PR #2](https://github.com/yuvananch-svg/LIFE-OS/pull/2): `npm test` 4 files / 18 tests และ typecheck ผ่าน; GitHub CI verify ผ่านก่อน merge; ดู [verification checkpoint](docs/voice-capture-design.md) |
 | 1.10 | ทำเอกสารสถาปัตยกรรมให้ตรงแผน | อัปเดต model/docs/architecture.md, contracts README, supabase/tests/README.md และตารางเฟส/API ใน plan.md ให้ตรง Voice Capture และ migration/test inventory | ไม่มีลำดับที่เลื่อน AI gateway พื้นฐานไปหลัง Capture; เอกสารแยกสิ่งที่มีแล้วกับสิ่งที่จะสร้าง | แก้และตรวจแล้ว; architecture/README แยก implemented กับ planned; migration inventory 5 และ SQL test inventory 6 ระบุครบ; ยังไม่ได้รัน SQL กับฐานข้อมูล remote; ดู [design checkpoint](docs/voice-capture-design.md) |
 
 ### 12.4 2. Auth และโปรไฟล์
@@ -246,3 +246,26 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 3.11–3.14 และ 4.14–4.16 | 5.8, 6.3 และ 8.11 | โมดูลใหม่ลงทะเบียนกับโครงกลางเดิม |
 
 แนวทาง migration: ใช้ foundation และ Auth/RLS เดิมต่อ; เพิ่ม schema ด้วย migrations ใหม่ ไม่แก้ประวัติ migration ที่ deploy แล้ว ไม่รื้อฐานข้อมูลหรือย้ายข้อมูลโดยไม่มีแผน compatibility/rollback และการตรวจรับ ส่วน read-only registry เดิมยังคงทำหน้าที่อ่าน; command registry เพิ่มเป็นอีก capability ภายใต้ระบบกลางเดียวกัน
+
+
+### 12.13 บันทึกการดำเนินงานและ merge — 2026-10-05
+
+งานรอบแรกข้อ 1 ดำเนินการโดย gpt-6.1-sol ระดับ light คุม/ตรวจงาน และ gpt-6-luna ระดับ light ลงมือทำ; ผู้คุมงานตีกลับ tests, type narrowing และ cleanup แล้วตรวจรับหลังแก้ไข ผู้ใช้อนุมัติ merge และ [PR #2](https://github.com/yuvananch-svg/LIFE-OS/pull/2) เข้า `main` แล้วที่ commit [a92422b](https://github.com/yuvananch-svg/LIFE-OS/commit/a92422bb86875bd45bc5bfb9ca3143e6e3668221) (implementation commit `de733bd`)
+
+- [x] **1.1** ตรวจ baseline ของโค้ดเดิมและบันทึกส่วนที่ใช้ต่อ/ต้องปรับใน [design และ audit checkpoint](docs/voice-capture-design.md)
+- [x] **1.9** รวม contracts ใน Vitest/TypeScript checks, แปลง assertions เป็น tests และแก้ type inference ที่การตรวจครอบคลุมใหม่พบ
+- [x] **1.10** อัปเดต architecture, contracts README, SQL tests README และแผนให้ตรง Voice Capture; ระบุ 5 migrations และ 6 SQL test files
+- [x] เพิ่ม preparatory Capture provider ภายใต้ authenticated layout แยกตาม user และ cleanup registry; ทดสอบ cleanup ทำต่อได้แม้ callback หนึ่งล้มเหลว
+- [x] เตรียม [design proposal](docs/voice-capture-design.md) และ [static mockup](docs/voice-capture-mockup.svg) สำหรับ **1.2**
+- [x] ตรวจในเครื่อง: unit tests **18 รายการ / 4 files**, typecheck, production build และ smoke **4 routes** ผ่าน; diff whitespace ผ่าน
+- [x] GitHub CI `verify` ของ PR head ผ่านก่อน merge
+- [x] Merge PR #2 เข้า `main` ตามคำสั่งผู้ใช้
+- [ ] **1.2** ผู้ใช้ตรวจและอนุมัติหน้าตา/interaction; การอนุมัติ merge ไม่ถือเป็นอนุมัติแบบหน้าจอโดยอัตโนมัติ
+- [ ] **1.8** ทำปุ่มกดค้างจริงและ recording lifecycle; โครงปัจจุบันเป็น `unavailable` และยังไม่มี microphone/transcription/AI execution
+- [ ] **1.3–1.6** ตรวจ responsive, UI states, PWA/offline และ accessibility ตาม checklist ใหม่บนอุปกรณ์จริง
+- [ ] **1.7** ตรวจรับข้อ 1 ทั้งหมดหลังงานค้างครบ
+- [ ] ตรวจ production deployment และผลทดสอบหลัง deploy; รอบนี้ไม่ได้สั่ง deploy หรือเปลี่ยนฐานข้อมูล
+
+Lint รอบนี้ไม่มี error และมี warning เดิมหนึ่งจุด: `eslint.config.mjs:1:62` (`import/no-anonymous-default-export`). ผล SQL remote, two-account browser test และ device acceptance ไม่ได้รันใหม่ในรอบนี้
+
+**กติกาบันทึกความคืบหน้าต่อไป:** หลังจบงานแต่ละชุดให้อัปเดตสถานะ sub task, สิ่งที่เปลี่ยน, tests/หลักฐาน, commit/PR และงานค้างใน Git ทุกครั้ง; ใช้ “เสร็จ” เฉพาะเกณฑ์ที่ตรวจผ่านจริง และแยกเตรียมโครง/รออนุมัติ/รออุปกรณ์ออกจากงานตรวจรับแล้ว
