@@ -273,6 +273,8 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 
 ### 12.1 ลำดับและการตรวจรับ
 
+> เพิ่มงานปรับโครงสร้างจาก code review ตามคำสั่งผู้ใช้วันที่ 2026-10-05; เพิ่มใน sub tasks เดิมโดยคงเลขเดิมไว้ งานที่เพิ่มยังไม่ใช่ implementation ที่เสร็จแล้ว
+
 - ลำดับหลัก: เก็บข้อ 1–2 → Planner schema ข้อ 3 → Voice Capture/Today/Plan ข้อ 4 → Health ข้อ 5 → Finance ข้อ 6 → Reminders/Insights/Export ข้อ 7 → AI ขั้นสูงข้อ 8 → ตรวจรับรวมข้อ 9
 - ย้าย AI gateway พื้นฐาน การแปลงเสียง/ตีความคำสั่ง และ command orchestration มาทำพร้อมข้อ 4 ไม่รอข้อ 8; ใช้ registry/gateway เดียวและต่อยอดในข้อ 8
 - Voice Capture เริ่มสั่ง Tasks/Calendar ได้ก่อน จากนั้นเพิ่มเครื่องมือ Health/Finance/Reminders เมื่อโมดูลนั้นพร้อม; คำสั่งที่ยังไม่รองรับต้องแจ้งชัดและไม่อ้างว่าทำสำเร็จ
@@ -306,6 +308,9 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 1.5 | ตรวจ PWA/offline | manifest, icons, service worker และการอัปเดต cache | เปิดจาก Home Screen ได้และ offline แสดงหน้าถูกต้อง | ยังไม่ตรวจรับ |
 | 1.6 | ตรวจการเข้าถึง | focus, labels, contrast และขนาดพื้นที่กด | ใช้คีย์บอร์ดและกดบนมือถือได้ | ยังไม่ตรวจรับ |
 | 1.7 | สรุปตรวจรับ | บันทึกผลจริงและข้อจำกัด | checklist ครบพร้อมหลักฐาน | ยังไม่ตรวจรับ |
+| 1.8 | ปรับ app shell สำหรับ Voice Capture | แยก navigation link ออกจากปุ่มกดค้าง; เพิ่ม client controller/provider ร่วมทุกหน้า โดยคง protected layout ฝั่ง server; วางไฟล์ใน src/features/capture และใช้ /capture สำหรับตรวจ transcript/ผลลัพธ์ตามแบบที่อนุมัติ | กดค้างจากทุกหน้าได้; มี recording session เดียว; เปลี่ยนหน้า/ยกเลิก/logout แล้วหยุดไมค์และ cleanup | ยังไม่ตรวจรับ |
+| 1.9 | จัด contracts และ test coverage พื้นฐาน | กำหนดตำแหน่ง shared contracts เดียว; ปรับ vitest include ให้รัน model/contracts/index.test.ts หรือย้ายพร้อมปรับ imports; เปลี่ยน top-level assertions เป็น tests ที่ runner รองรับ; ตรวจ typecheck ครอบคลุมไฟล์กลางที่ไม่ได้ถูก import โดย src | CI รัน tests ของ registry/conflict/availability จริงและตรวจ types ของไฟล์กลาง; ไม่รอข้อ 9 | ยังไม่ตรวจรับ |
+| 1.10 | ทำเอกสารสถาปัตยกรรมให้ตรงแผน | อัปเดต model/docs/architecture.md, contracts README, supabase/tests/README.md และตารางเฟส/API ใน plan.md ให้ตรง Voice Capture และ migration/test inventory | ไม่มีลำดับที่เลื่อน AI gateway พื้นฐานไปหลัง Capture; เอกสารแยกสิ่งที่มีแล้วกับสิ่งที่จะสร้าง | ยังไม่ตรวจรับ |
 
 ### 12.4 2. Auth และโปรไฟล์
 
@@ -318,6 +323,8 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 2.5 | ตรวจสองบัญชี | ใช้โปรไฟล์ต่างกันและสลับบัญชี | ไม่มีข้อมูลข้ามบัญชี | ยังไม่ตรวจรับ |
 | 2.6 | ตรวจ session/logout | refresh, session หมดอายุ และ protected route หลัง logout | ผู้ไม่มี session ถูกส่งไป login | ยังไม่ตรวจรับ |
 | 2.7 | สรุปตรวจรับ | แยกผล SQL tests กับผลทดสอบผ่านเว็บ | มีหลักฐานก่อนปิดข้อ 2 | ยังไม่ตรวจรับ |
+| 2.8 | รวม profile context และ timezone | ให้ app shell โหลด preferences จากบัญชีที่ยืนยันแล้ว; ส่ง timezone/locale ไป UI และ command context แทน Asia/Bangkok คงที่; ตรวจ session/account change ไม่ให้ใช้ preferences เดิม | header และวันนี้/พรุ่งนี้ใช้ timezone โปรไฟล์เดียวกัน; สลับบัญชี/logout ไม่เหลือ context เก่า | ยังไม่ตรวจรับ |
+| 2.9 | ออกแบบ consent กลาง | กำหนดความหมาย global ai_consent + section_permissions และการอนุญาตส่งเสียงไป transcription provider; เตรียม UI/contract สำหรับ scope resolver ในข้อ 3.12 | ปิด global หรือสิทธิ์ section แล้วถูกปฏิเสธตามกฎ; กำหนด default deny และขอบเขตการเพิกถอนชัดเจน | ยังไม่ตรวจรับ |
 
 ### 12.5 3. Planner schema และกฎข้อมูล
 
@@ -333,6 +340,10 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 3.8 | ทำ atomic write | canonical entity, typed row และ time block ใน transaction เดียว | ล้มเหลวแล้วไม่มีข้อมูลค้างบางส่วน | ยังไม่ตรวจรับ |
 | 3.9 | ทำ RLS/constraints/indexes | owner policies, FK, unique keys และ indexes ที่จำเป็น | ปฏิเสธข้อมูลผิดและข้ามบัญชี | ยังไม่ตรวจรับ |
 | 3.10 | ทดสอบ migration | ทดสอบ environment ที่เหมาะสมและอัปเดต types | รันจากฐานสะอาดได้ตามลำดับ | ยังไม่ตรวจรับ |
+| 3.11 | เพิ่ม command contracts และ registry | ขยาย read registry เดิมด้วย command definitions: ชื่อ version input schema required read/write scope และ handler; แยก proposal ออกจาก execution; ใช้ registry เดียวสำหรับฟอร์มและเสียงตามความเหมาะสม | มี typed commands Tasks/Calendar; reject unknown command และ malformed payload; AI output ไม่เขียน DB โดยตรง | ยังไม่ตรวจรับ |
+| 3.12 | สร้าง authorization scope จาก server | สร้าง scope จาก authenticated session, ai_consent, section_permissions และ field rules; ไม่เชื่อ scope/user_id จาก browser; ตรวจอีกครั้งตอน execution | owner-only + global/section permissions บังคับจริง; revoked consent ระหว่าง preview/confirm ถูกปฏิเสธ | ยังไม่ตรวจรับ |
+| 3.13 | ทำ read boundary และ timeline adapter | ตรวจ entityTypes, owner, section, fields, ช่วงวัน, limit และ runtime payload shape; กำหนด handling ของ facts ไม่มีเวลา/metrics interval ผิด; map planned เป็น busy/tentative และตัด cancelled | provider คืนข้อมูลเกินขอบเขตแล้วถูกกรอง/ปฏิเสธ; timeline ไม่รวม cancelled; boundary tests ครบ | ยังไม่ตรวจรับ |
+| 3.14 | เพิ่ม idempotent mutation และ proposal lifecycle | ออกแบบ request/command IDs, owner-scoped dedupe, proposal version/expiry และ execute transaction ที่ตรวจข้อมูลล่าสุด; ครอบคลุม entity + typed row + time block; ตัดสินใจ atomicity ของหลายคำสั่งที่เป็นอิสระและแสดงผลรายคำสั่ง | retry/double confirm ไม่สร้างซ้ำ; proposal เปลี่ยน/หมดอายุต้องตรวจใหม่; rollback ไม่มีข้อมูลครึ่งเดียว; ไม่อ้างว่าทุก batch สำเร็จหากสำเร็จบางคำสั่ง | ยังไม่ตรวจรับ |
 
 ### 12.6 4. Voice Capture → Today → Plan และตรวจเวลาชน (ฉบับอนุมัติล่าสุด)
 
@@ -351,6 +362,9 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 4.11 | Plan UI | รายการ/ปฏิทินและตัวกรอง life area | เปิดรายละเอียดและเปลี่ยนช่วงวันได้ | ยังไม่ตรวจรับ |
 | 4.12 | ตรวจ conflict และช่วงว่าง | เชื่อม findConflicts/availableSlots กับ time blocks จริงและ availability rules; แสดงต้นทางและให้ผู้ใช้เลือก | overlap/ช่วงติดกันถูกต้อง; slot ไม่ชนและยาวพอ | ยังไม่ตรวจรับ |
 | 4.13 | ทดสอบครบเส้นทาง | พูด → transcript → AI → preview → confirm → Capture/Today/Plan → แก้/ปิดงาน | ข้อมูลตรงกันและแยกบัญชี; voice pipeline ไม่ขึ้นกับ AI วิเคราะห์ขั้นสูง | ยังไม่ตรวจรับ |
+| 4.14 | จัด voice pipeline และ API boundary | แยก recorder → transcription → interpretation → proposal → confirm/execute; server-only gateway/keys; runtime schemas และ state machine idle/requesting_permission/recording/transcribing/interpreting/needs_input/preview/executing/success/error/cancelled | มี owner-scoped flow; ปล่อยปุ่มส่งครั้งเดียว; ยกเลิก/ผลตอบกลับล่าช้าไม่ execute; gateway พื้นฐานมี timeout/rate limit ตั้งแต่ข้อ 4 | ยังไม่ตรวจรับ |
+| 4.15 | เชื่อม confirmation กับ command service | ใช้ contracts/scope/idempotency จาก 3.11–3.14; ผูก preview กับ version ของคำสั่ง; transcript แก้แล้วตีความใหม่; execute เฉพาะคำสั่งที่ยืนยัน | ไม่มี write ก่อน confirm; เปลี่ยน preview ไม่ใช้การอนุมัติเก่า; แสดงผลจริงต่อคำสั่งและขอ confirm ใหม่เมื่อข้อมูลสำคัญเปลี่ยน | ยังไม่ตรวจรับ |
+| 4.16 | กำหนด audio lifecycle และ retention | ระบุขนาด/ความยาว/format ที่รองรับบนอุปกรณ์จริง; จัดการ abort, interruption, resource cleanup; กำหนดว่าจะเก็บเสียง/transcriptหรือไม่ ระยะเก็บ และการลบ ก่อนเลือก storage implementation | ไมค์ไม่ค้างหลังยกเลิก/logout; ไม่ส่งเสียงที่ยกเลิก; retention มีเอกสารและไม่ใช้ public cache เก็บเสียงส่วนตัว | ยังไม่ตรวจรับ |
 
 ### 12.7 5. Health
 
@@ -408,6 +422,7 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 8.8 | ขยาย proposal/confirmation | ใช้ flow จากข้อ 4 สำหรับคำสั่งซับซ้อนและข้ามด้าน | ไม่แก้ก่อนยืนยัน; ตรวจสิทธิ์อีกครั้งตอน execute | ยังไม่ตรวจรับ |
 | 8.9 | fallback/security tests | AI ล่ม prompt injection และข้อมูลต่างบัญชี | บันทึกปกติใช้ได้และไม่รั่ว | ยังไม่ตรวจรับ |
 | 8.10 | ตรวจ section ใหม่ | adapter ทดลองและทดสอบข้ามด้าน | ไม่เขียนกฎเฉพาะคู่ section | ยังไม่ตรวจรับ |
+| 8.11 | ต่อยอดโครงสร้างกลางโดยไม่สร้างซ้ำ | ใช้ command registry/scope resolver/gateway/proposal service ที่ข้อ 3–4 สร้างแล้ว; เพิ่ม adapter/context builder และ advanced intents แทน gateway หรือ consent อีกชุด | คำสั่งเสียงและ assistant ใช้ permission/confirmation policy เดียวกัน; ไม่มี code path ลัดที่ bypass checks | ยังไม่ตรวจรับ |
 
 ### 12.11 9. ตรวจครบและปล่อยใช้งาน
 
@@ -422,3 +437,18 @@ LIFE OS เป็นศูนย์กลางดูแลชีวิตปร
 | 9.7 | deployment | env, migrations และเวอร์ชัน deploy | ตรง commit ตรวจรับ | ยังไม่ตรวจรับ |
 | 9.8 | Release/rollback | checklist, recovery และคู่มือ | พร้อมปล่อยและย้อนกลับ | ยังไม่ตรวจรับ |
 | 9.9 | อัปเดตแผน | ความคืบหน้า หลักฐานและข้อจำกัด | plan.md ตรงงานจริง | ยังไม่ตรวจรับ |
+
+
+### 12.12 Dependencies ของงานปรับโครงสร้าง
+
+| ต้องเตรียมก่อน | งานที่พึ่งพา | เหตุผล |
+|---|---|---|
+| 1.8 และ 2.8 | 4.1–4.3, 4.14, 4.16 | ปุ่มเสียงและ context ต้องใช้ร่วมจากทุกหน้าและบัญชี |
+| 1.9 | งานโค้ดกลางข้อ 3–4 | ตรวจ contracts ใน CI ก่อนต่อยอด |
+| 2.9 → 3.12 | 4.5–4.6, 4.15 | scope มาจาก session/consent จริง |
+| 3.8, 3.11, 3.14 | 4.5–4.7, 4.15 | write มี schema, confirmation, atomicity และ dedupe |
+| 3.13 | 4.10, 4.12 และ 8.4 | query จำกัดขอบเขตและ timeline มีสถานะถูกต้อง |
+| 4.14–4.16 | 4.8, 4.13 และ 9.2 | ทดสอบเสียงครบ lifecycle และคำสั่งจริง |
+| 3.11–3.14 และ 4.14–4.16 | 5.8, 6.3 และ 8.11 | โมดูลใหม่ลงทะเบียนกับโครงกลางเดิม |
+
+แนวทาง migration: ใช้ foundation และ Auth/RLS เดิมต่อ; เพิ่ม schema ด้วย migrations ใหม่ ไม่แก้ประวัติ migration ที่ deploy แล้ว ไม่รื้อฐานข้อมูลหรือย้ายข้อมูลโดยไม่มีแผน compatibility/rollback และการตรวจรับ ส่วน read-only registry เดิมยังคงทำหน้าที่อ่าน; command registry เพิ่มเป็นอีก capability ภายใต้ระบบกลางเดียวกัน
