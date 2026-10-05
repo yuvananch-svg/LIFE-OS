@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase';
+import { hasSupabaseConfig } from '@/lib/supabase-config';
 
 export function LoginForm({ initialError }: { initialError: string }) {
   const [email, setEmail] = useState('');
@@ -15,6 +16,10 @@ export function LoginForm({ initialError }: { initialError: string }) {
     setError('');
     setSending(true);
     try {
+      if (!hasSupabaseConfig()) {
+        setError('เข้าสู่ระบบยังไม่พร้อม กรุณาตั้งค่า Supabase URL และ publishable key');
+        return;
+      }
       const { error: authError } = await createClient().auth.signInWithOtp({
         email: email.trim(),
         options: { emailRedirectTo: `${window.location.origin}/callback` },
